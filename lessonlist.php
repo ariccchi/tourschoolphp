@@ -18,11 +18,8 @@ $title = $data['title'];
 $database = new DatabaseModel();
 
 // SQL-запрос для выбора новости с заданным title
-$sql = "SELECT lessons.title AS lesson_title
-FROM lessons
-JOIN courses ON lessons.course_id = courses.id
-WHERE courses.course_name = ?;
-";
+$sql = "SELECT lessons.id AS lesson_id, lessons.title AS lesson_title, order_number, user_progress.id, user_progress.is_completed, user_progress.completed_at, user_progress.available_at, user_progress.result FROM lessons JOIN courses ON lessons.course_id = courses.id LEFT JOIN user_progress ON lessons.id = user_progress.lesson_id AND user_progress.user_id = 26 WHERE courses.course_name = ? ";
+
 $stmt = $database->prepare($sql);
 $stmt->bind_param("s", $title);
 $stmt->execute();
