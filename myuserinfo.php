@@ -16,11 +16,18 @@ $user = $data['user'];
 // Создаем экземпляр класса DatabaseModel
 $database = new DatabaseModel();
 
-$sql = "SELECT u.id, u.name, u.surname, u.email, u.birthdate, u.registration_date, u.role, u.city,
-               u.curator, c.name AS curator_name, c.surname AS curator_surname
-        FROM users u
-        LEFT JOIN users c ON u.curator = c.id
-        WHERE u.id = ?";
+// SQL query to get user information along with check for existence in user_blocks
+$sql = "SELECT 
+u.id, u.name, u.surname, u.email, u.birthdate, u.registration_date, u.role, u.city,
+u.curator, c.name AS curator_name, c.surname AS curator_surname,
+IF(EXISTS (SELECT 1 FROM user_blocks WHERE user_id = u.id), 
+   (SELECT block_reason FROM user_blocks WHERE user_id = u.id LIMIT 1), 
+   NULL) AS block_reason,
+EXISTS (SELECT 1 FROM user_blocks WHERE user_id = u.id) AS user_exists_in_blocks
+FROM users u
+LEFT JOIN users c ON u.curator = c.id
+WHERE u.id = ?;
+";
 
 $stmt = $database->prepare($sql);
 $stmt->bind_param("s", $user);
