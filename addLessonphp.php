@@ -8,10 +8,15 @@ header("Content-Type: application/json");
 header('Access-Control-Allow-Headers: Access-Control-Allow-Headers,Content-Type,Access-Control-Allow-Methods, Authorization, X-Requested-With');
 
 $video = isset($_POST['video']) ? $_POST['video'] : null;
-$terminarray = isset($_POST['terminarray']) ? json_decode($_POST['terminarray']) : null;
+
+$terminarray = isset($_POST['terminarray']) ? json_decode($_POST['terminarray'], true) : null;
+
 $infoarray = isset($_POST['infoarray']) ? json_decode($_POST['infoarray'], true) : null;
 
 $testarray = isset($_POST['testarray']) ? json_decode($_POST['testarray'], true) : null;
+
+$finarray = isset($_POST['finarray']) ? json_decode($_POST['finarray'], true) : null;
+
 
 $link = isset($_POST['link']) ? json_decode($_POST['link'], true) : null;
 
@@ -85,16 +90,17 @@ if (!empty($infoarray)) {
 if (!empty($terminarray)) {
     $insertTerminQuery = "INSERT INTO lessontermins (lesson_id, text, time_in) VALUES (?, ?, ?)";
     $insertTerminStmt = $db->prepare($insertTerminQuery);
-
     foreach ($terminarray as $termin) {
         $timeInSeconds = $termin['time'];
         $formattedTime = gmdate("H:i:s", $timeInSeconds);
-
-        $insertTerminStmt->bind_param("iss", $lessonId, $termin['text'], $formattedTime); // Используйте insertTerminStmt здесь
-        $insertTerminStmt->execute(); // Используйте insertTerminStmt здесь
+    
+        $insertTerminStmt->bind_param("iss", $lessonId, $termin['text'], $formattedTime);
+        if (!$insertTerminStmt->execute()) {
+            die("Ошибка выполнения запроса: " . $insertTerminStmt->error);
+        }
     }
-
-    $insertTerminStmt->close(); // Используйте insertTerminStmt здесь
+    
+    $insertTerminStmt->close();
 }
 
 if (!empty($testarray)) {
@@ -113,11 +119,25 @@ if (!empty($testarray)) {
     $insertTestStmt->close();
 }
 
+if (!empty($finarray)) {
+    $insertFinQuery = "INSERT INTO finaltest (question,incorrect_answer1, incorrect_answer2, incorrect_answer3, correct_answer, lesson_id) VALUES (?, ?, ?, ?, ?, ?)";
+    $insertFinStmt = $db->prepare($insertFinQuery);
+
+    foreach ($finarray as $fin) {
+
+        $insertFinStmt->bind_param("sssssi", $fin['finQuestion'], $fin['finIncorrect1'], $fin['finIncorrect2'], $fin['finIncorrect3'],
+        $fin['finCorrectAnswer'], $lessonId);
+        $insertFinStmt->execute();
+    }
+
+    $insertFinStmt->close();
+}
+
 if (!empty($link)) {
     $insertlinkQuery = "INSERT INTO doplinks (lesson_id, text) VALUES (?, ?)";
     $insertlinkStmt = $db->prepare($insertlinkQuery);
 
-    foreach ($linkarray as $link) {
+    foreach ($link as $link) {
         $insertlinkStmt->bind_param("is",  $lessonId, $link['text']);
         $insertlinkStmt->execute();
     }
@@ -125,5 +145,4 @@ if (!empty($link)) {
     $insertlinkStmt->close();
 }
 
-echo json_encode(['success' => true]);
 ?>
