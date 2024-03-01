@@ -12,18 +12,29 @@ $json = file_get_contents('php://input');
 $data = json_decode($json, true);
 
 // Получить title из данных
-$title = $data['title'];
-$user_id = $data['user_id'];
+$title = isset($data['title']) ? $data['title'] : null;
+$user_id = isset($data['user_id']) ? $data['user_id'] : null;
+$course = isset($data['course']) ? $data['course'] : null;
+
+// Проверка наличия необходимых данных
+if ($title === null || $user_id === null || $course === null) {
+    echo json_encode(["error" => "Отсутствуют необходимые данные"]);
+    exit;
+}
 
 // Создаем экземпляр класса DatabaseModel
 $database = new DatabaseModel();
 
 // SQL-запрос для выбора новости с заданным title
-$sql = "SELECT finaltest.* FROM finaltest JOIN lessons ON finaltest.lesson_id WHERE lessons.title = ? ";
+$sql = "SELECT finaltest.* 
+FROM finaltest 
+JOIN lessons ON finaltest.lesson_id = lessons.id 
+JOIN courses ON lessons.course_id = courses.id
+WHERE lessons.title = ? AND courses.course_name = ?";
 
 
 $stmt = $database->prepare($sql);
-$stmt->bind_param("s", $title);
+$stmt->bind_param("ss", $title, $course);
 $stmt->execute();
 
 

@@ -10,6 +10,12 @@ $json = file_get_contents('php://input');
 // Преобразовать JSON в ассоциативный массив
 $data = json_decode($json, true);
 
+// Проверить наличие необходимых ключей в массиве $data
+if (!isset($data['user_id'], $data['lesson_id'], $data['is_completed'], $data['result'])) {
+    echo json_encode(["error" => "Отсутствуют необходимые данные"]);
+    exit;
+}
+
 // Получаем данные из массива
 $user_id = $data['user_id'];
 $title = $data['lesson_id'];  // Заменили 'lesson_id' на 'title'
@@ -30,9 +36,9 @@ try {
     $stmt_get_lesson_id->close();
 
     // Проверяем, есть ли уже запись с таким lesson_id в user_progress
-    $sql_check_unique = "SELECT COUNT(*) FROM user_progress WHERE lesson_id = ?";
+    $sql_check_unique = "SELECT COUNT(*) FROM user_progress WHERE user_id = ? AND lesson_id = ?";
     $stmt_check_unique = $database->prepare($sql_check_unique);
-    $stmt_check_unique->bind_param("i", $lesson_id);
+    $stmt_check_unique->bind_param("ii", $user_id, $lesson_id);
     $stmt_check_unique->execute();
     $stmt_check_unique->bind_result($count);
     $stmt_check_unique->fetch();

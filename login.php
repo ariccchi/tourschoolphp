@@ -95,6 +95,12 @@ $request = json_decode($postdata);
 
 // Создайте экземпляр класса UserLogin и вызовите метод execute
 $login = new UserLogin();
-$login->execute($request->username, $request->password);
+if (isset($request->username, $request->password)) {
+    // Создайте экземпляр класса UserLogin и вызовите метод execute
+    $login = new UserLogin();
+    $login->execute($request->username, $request->password);
+} else {
+    echo json_encode(array('status' => 'error', 'message' => 'Invalid request data'));
+}
 
 ?>

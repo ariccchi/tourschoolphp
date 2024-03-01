@@ -11,6 +11,12 @@ $json = file_get_contents('php://input');
 // Преобразовать JSON в ассоциативный массив
 $data = json_decode($json, true);
 
+// Проверить наличие необходимых ключей в массиве $data
+if (!isset($data['title'], $data['user_id'])) {
+    echo json_encode(["error" => "Отсутствуют необходимые данные"]);
+    exit;
+}
+
 // Получить title из данных
 $title = $data['title'];
 $user_id = $data['user_id'];
@@ -27,15 +33,12 @@ JOIN finaltest AS t ON r.test_id = t.id
 JOIN lessons AS l ON l.id = t.lesson_id
 WHERE r.user_id = ? AND l.title = ?";
 
-
 $stmt = $database->prepare($sql);
 $stmt->bind_param("ss", $user_id, $title);
 $stmt->execute();
 
-
 $result = $stmt->get_result();
 
-// Проверяем, есть ли результат
 // Проверяем, есть ли результат
 if ($result->num_rows > 0) {
     // Инициализируем пустой массив для хранения всех строк
@@ -49,9 +52,8 @@ if ($result->num_rows > 0) {
     // Возвращаем данные в формате JSON
     echo json_encode($rows);
 } else {
-    echo json_encode(["error" => "Курс не найдена"]);
+    echo json_encode(["error" => "Курс не найден"]);
 }
-
 
 // Закрываем соединение с базой данных
 $database->close();

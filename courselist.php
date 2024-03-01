@@ -2,15 +2,15 @@
 require_once "DatabaseModel.php";
 header("Access-Control-Allow-Origin: *");
 
-?>
-
-
-<?php
 // Создаем экземпляр класса DatabaseModel
 $database = new DatabaseModel();
 
-// SQL-запрос для выбора всех данных из таблицы "news"
-$sql = "SELECT * FROM courses";
+// SQL-запрос для выбора данных из таблицы "courses" и "lessons" с использованием JOIN
+$sql = "SELECT courses.*, COUNT(lessons.id) AS lesson_count
+        FROM courses
+        LEFT JOIN lessons ON courses.id = lessons.course_id
+        GROUP BY courses.id";
+
 $result = $database->query($sql);
 
 // Проверяем, есть ли результат

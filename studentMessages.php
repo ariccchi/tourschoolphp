@@ -14,13 +14,13 @@ $title = $data['title'];
 
 // Создаем экземпляр класса DatabaseModel
 $database = new DatabaseModel(); 
-$sql = "SELECT u.id, u.name, u.surname, u.email
+$sql = "SELECT u.id, u.name, u.surname, u.email, u.avatar
 FROM users u
-WHERE u.id IN (SELECT curator FROM users WHERE id = ?);
+WHERE u.id IN (SELECT curator FROM users WHERE id = ?)
+   OR u.role = 'admin';
 ";
-                
 
-                $stmt = $database->prepare($sql);
+$stmt = $database->prepare($sql);
 $stmt->bind_param("s", $title);
 $stmt->execute();
 

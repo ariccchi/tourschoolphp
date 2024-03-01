@@ -8,12 +8,18 @@ header("Content-Type: application/json");
 $json = file_get_contents('php://input');
 $data = json_decode($json, true);
 
+// Check if 'user_id' is set in the decoded JSON data
+if (!isset($data['user_id'])) {
+    echo json_encode(["error" => "User ID not provided"]);
+    exit;
+}
+
 $user_id = $data['user_id'];
 
-// Создаем экземпляр класса DatabaseModel
+// Create an instance of the DatabaseModel class
 $database = new DatabaseModel();
 
-// SQL-запрос для выбора данных
+// SQL query to select data
 $sql = "SELECT 
             up.available_at, 
             c.course_name, 
@@ -29,29 +35,28 @@ $sql = "SELECT
         WHERE 
             up.user_id = ?";
 
-// Подготавливаем запрос
+// Prepare the query
 $stmt = $database->prepare($sql);
 $stmt->bind_param("i", $user_id);
 $stmt->execute();
 
-
-// Выполняем запрос
+// Execute the query
 $result = $stmt->get_result();
 if ($result->num_rows > 0) {
-   // Создаем массив для хранения всех строк
-   $rows = array();
+    // Create an array to store all rows
+    $rows = array();
 
-   // Обрабатываем каждую строку
-   while($row = $result->fetch_assoc()) {
-       // Добавляем строку в массив
-       $rows[] = $row;
-   }
+    // Process each row
+    while ($row = $result->fetch_assoc()) {
+        // Add the row to the array
+        $rows[] = $row;
+    }
 
-   // Возвращаем все строки в формате JSON
-   echo json_encode($rows);
+    // Return all rows in JSON format
+    echo json_encode($rows);
 } else {
-   echo json_encode(["error" => "Новость не найдена"]);
+    echo json_encode(["error" => "No data found"]);
 }
 
+// Close the database connection
 $database->close();
-?>

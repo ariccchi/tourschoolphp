@@ -5,43 +5,54 @@ header("Access-Control-Allow-Methods: POST, OPTIONS");
 header("Access-Control-Allow-Headers: Content-Type");
 header("Content-Type: application/json");
 
+// Get JSON data from the request
 $json = file_get_contents('php://input');
 
-// Преобразовать JSON в ассоциативный массив
+// Decode JSON into an associative array
 $data = json_decode($json, true);
 
-// Получить title из данных
-$user = $data['user'];
+// Check if the 'user' key is present in the data
+if (isset($data['user'])) {
+    // Get the value of the 'user' key
+    $user = $data['user'];
 
-// Создаем экземпляр класса DatabaseModel
-$database = new DatabaseModel();
+    // Create an instance of the DatabaseModel class
+    $database = new DatabaseModel();
 
-$sql = "SELECT  u.id, u.name, u.surname, u.email, u.birthdate, u.registration_date, u.role, u.city,
-u.curator
-        FROM users u
-        WHERE curator = ?";
+    // SQL query to select data based on the 'curator' column
+    $sql = "SELECT u.id, u.name, u.surname, u.email, u.birthdate, u.registration_date, u.role, u.city, u.curator
+            FROM users u
+            WHERE curator = ?";
 
-$stmt = $database->prepare($sql);
-$stmt->bind_param("s", $user);
-$stmt->execute();
-// ...
+    // Prepare and execute the SQL query
+    $stmt = $database->prepare($sql);
+    $stmt->bind_param("s", $user);
+    $stmt->execute();
 
-$result = $stmt->get_result();
-if ($result->num_rows > 0) {
-    // Создаем массив для хранения всех строк
-    $rows = array();
+    // Get the result set
+    $result = $stmt->get_result();
 
-    // Обрабатываем каждую строку результата запроса
-    while ($row = $result->fetch_assoc()) {
-        $rows[] = $row;
+    // Check if there are rows in the result set
+    if ($result->num_rows > 0) {
+        // Create an array to store all rows
+        $rows = array();
+
+        // Process each row in the result set
+        while ($row = $result->fetch_assoc()) {
+            $rows[] = $row;
+        }
+
+        // Return all rows in JSON format
+        echo json_encode($rows);
+    } else {
+        // Return an error message if no rows are found
+        echo json_encode(["error" => "No data found"]);
     }
 
-    // Возвращаем все строки в формате JSON
-    echo json_encode($rows);
+    // Close the database connection
+    $database->close();
 } else {
-    echo json_encode(["error" => "Новость не найдена"]);
+    // Return an error message if the 'user' key is not present
+    echo json_encode(["error" => "Invalid request data"]);
 }
-
-$database->close();
-
 ?>

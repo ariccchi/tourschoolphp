@@ -10,6 +10,12 @@ $json = file_get_contents('php://input');
 // Преобразовать JSON в ассоциативный массив
 $data = json_decode($json, true);
 
+// Проверяем, установлен ли ключ 'user' в данных
+if (!isset($data['user'])) {
+    echo json_encode(["error" => "Не удалось получить 'user' из данных"]);
+    exit;
+}
+
 // Получить user_id из данных
 $user_id = $data['user'];
 
@@ -23,7 +29,7 @@ $sql = "SELECT c.*,
         FROM courses c
         JOIN user_courses uc ON c.id = uc.course_id
         LEFT JOIN lessons l ON c.id = l.course_id
-        LEFT JOIN lesson_finished ul ON l.id = ul.lesson_id AND uc.user_id = ul.user_id
+        LEFT JOIN user_progress ul ON l.id = ul.lesson_id AND uc.user_id = ul.user_id
         WHERE uc.user_id = ?
         GROUP BY c.id;
 ";

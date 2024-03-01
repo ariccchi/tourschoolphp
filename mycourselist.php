@@ -16,8 +16,14 @@ if (!empty($data->user_id)) {
     // Получаем ID пользователя из тела запроса
     $user_id = $data->user_id;
 
-    // SQL-запрос для выбора всех данных из таблицы "courses", которые относятся к данному пользователю
-    $sql = "SELECT courses.* FROM courses JOIN user_courses ON courses.id = user_courses.course_id WHERE user_courses.user_id = $user_id";
+    // SQL-запрос для выбора данных из таблицы "courses" с учетом lesson_count для данного пользователя
+    $sql = "SELECT courses.*, COUNT(lessons.id) AS lesson_count
+            FROM courses
+            LEFT JOIN user_courses ON courses.id = user_courses.course_id
+            LEFT JOIN lessons ON courses.id = lessons.course_id
+            WHERE user_courses.user_id = $user_id
+            GROUP BY courses.id";
+
     $result = $database->query($sql);
 
     // Проверяем, есть ли результат
@@ -26,7 +32,7 @@ if (!empty($data->user_id)) {
         $output = array();
 
         // Добавляем каждую строку в массив
-        while($row = $result->fetch_assoc()) {
+        while ($row = $result->fetch_assoc()) {
             $output[] = $row;
         }
 
@@ -41,4 +47,3 @@ if (!empty($data->user_id)) {
 
 // Закрываем соединение с базой данных
 $database->close();
-?>

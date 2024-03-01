@@ -9,24 +9,26 @@ $json = file_get_contents('php://input');
 // Преобразовать JSON в ассоциативный массив
 $data = json_decode($json, true);
 
+// Проверяем, установлен ли ключ 'title' в данных
+if (!isset($data['title'])) {
+    echo json_encode(["error" => "Не удалось получить 'title' из данных"]);
+    exit;
+}
+
 // Получить title из данных
 $title = $data['title'];
 
 // Создаем экземпляр класса DatabaseModel
 $database = new DatabaseModel(); 
 $sql = "SELECT id, name, surname, avatar
-FROM users
-WHERE curator = ?;
+FROM users;
 ";
-                
 
-                $stmt = $database->prepare($sql);
-$stmt->bind_param("s", $title);
+$stmt = $database->prepare($sql);
 $stmt->execute();
 
 $result = $stmt->get_result();
 
-// Проверяем, есть ли результат
 // Проверяем, есть ли результат
 if ($result->num_rows > 0) {
     // Инициализируем пустой массив для хранения всех строк
@@ -42,7 +44,6 @@ if ($result->num_rows > 0) {
 } else {
     echo json_encode(["error" => "Ученики не найдены"]);
 }
-
 
 // Закрываем соединение с базой данных
 $database->close();
